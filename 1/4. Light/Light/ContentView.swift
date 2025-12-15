@@ -11,7 +11,7 @@ struct ContentView: View {
     @State var isLightOn:Bool = true
     var body: some View {
         VStack {
-            Color(isLightOn ? .blue : .white)
+            Color(isLightOn ? .green : .white)
             Button("Switch \(isLightOn ? "OFF": "ON")"){
                 isLightOn.toggle()
             }
