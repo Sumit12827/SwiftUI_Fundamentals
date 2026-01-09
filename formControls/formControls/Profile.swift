@@ -13,5 +13,4 @@ struct Profile {
     var isPublic: Bool
     var role: String
     
-    
 }
