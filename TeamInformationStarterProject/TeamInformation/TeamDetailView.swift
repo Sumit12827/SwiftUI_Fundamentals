@@ -45,7 +45,7 @@ struct TeamDetailView: View {
             }
             
             Section {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 13) {
                     Text("Student Details")
                         .font(.title3.bold())
                     
