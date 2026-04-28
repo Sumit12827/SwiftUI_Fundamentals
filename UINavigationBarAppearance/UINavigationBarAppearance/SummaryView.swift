@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SummaryView: View {
+
     private let rows: [SummaryRow] = [
         .init(title: "Transparent scroll edge", subtitle: "Large title sits on black content", symbol: "rectangle.topthird.inset.filled", tint: .blue),
         .init(title: "Blurred standard bar", subtitle: "Appears automatically while scrolling", symbol: "sparkles.rectangle.stack", tint: .purple),
@@ -16,39 +17,66 @@ struct SummaryView: View {
         .init(title: "Sleep", subtitle: "7h 18m", symbol: "bed.double.fill", tint: .indigo)
     ]
 
-    var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 14) {
-                Text(formattedDate)
-                    .font(.system(.headline, design: .rounded, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 4)
+    @State private var showInlineTitle = false
 
+    var body: some View {
+        List {
+            Section {
+                // Custom Large Header perfectly matching Apple Fitness
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Summary")
+                            .font(.system(.largeTitle, weight: .bold))
+                            .foregroundStyle(.white)
+                        
+                        Text(formattedDate)
+                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    ProfileButton(size: 40)
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16))
+                .listRowSeparator(.hidden)
+                .background {
+                    // Track scroll offset to fade in the inline title
+                    GeometryReader { geo in
+                        Color.clear.onChange(of: geo.frame(in: .global).maxY) { oldVal, newVal in
+                            let shouldShow = newVal < 100 // Threshold for when header scrolls out
+                            if showInlineTitle != shouldShow {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showInlineTitle = shouldShow
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Section {
                 ForEach(rows) { row in
                     SummaryCard(row: row)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 7, leading: 16, bottom: 7, trailing: 16))
+                        .listRowSeparator(.hidden)
                 }
             }
-            .padding(.bottom, 32)
         }
-        .background(Color.black)
+        .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .navigationTitle("Summary")
-        .navigationBarTitleDisplayMode(.large)
+        .background(Color.black)
+        .navigationTitle(showInlineTitle ? "Summary" : "")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                } label: {
-                    Image(systemName: "person.crop.circle.fill")
-                        .font(.title2)
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(.blue, .white)
+            if showInlineTitle {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ProfileButton(size: 28)
                 }
-                .accessibilityLabel("Profile")
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     private var formattedDate: String {
@@ -58,6 +86,24 @@ struct SummaryView: View {
     }
 }
 
+// MARK: - Profile Button
+
+private struct ProfileButton: View {
+    var size: CGFloat
+    
+    var body: some View {
+        Button {} label: {
+            Image(systemName: "person.crop.circle.fill")
+                .font(.system(size: size))
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(.blue, .gray.opacity(0.35))
+        }
+        .accessibilityLabel("Profile")
+    }
+}
+
+// MARK: - Data Model
+
 private struct SummaryRow: Identifiable {
     let id = UUID()
     let title: String
@@ -65,6 +111,8 @@ private struct SummaryRow: Identifiable {
     let symbol: String
     let tint: Color
 }
+
+// MARK: - Card Component
 
 private struct SummaryCard: View {
     let row: SummaryRow
@@ -95,15 +143,12 @@ private struct SummaryCard: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(.white.opacity(0.06), lineWidth: 1)
         }
-        .padding(.horizontal, 16)
     }
 }
 
-struct SummaryView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationStack {
-            SummaryView()
-        }
-        .preferredColorScheme(.dark)
+#Preview {
+    NavigationStack {
+        SummaryView()
     }
+    .preferredColorScheme(.dark)
 }
